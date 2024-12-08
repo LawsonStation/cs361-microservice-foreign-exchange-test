@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .converter-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        h1 {
+            font-size: 20px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:disabled {
+            background-color: #ccc;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #eaf7ea;
+            border: 1px solid #b2d8b2;
+            border-radius: 5px;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="converter-container">
+        <h1>Currency Converter</h1>
+        <form id="converterForm">
+            <div class="form-group">
+                <label for="amount">Amount in USD:</label>
+                <input type="number" id="amount" name="amount" placeholder="Enter amount" required />
+            </div>
+            <div class="form-group">
+                <label for="currency">Target Currency:</label>
+                <select id="currency" name="currency" required>
+                    <option value="" disabled selected>Select currency</option>
+                    <option value="EUR">Euro (EUR)</option>
+                    <option value="GBP">British Pound (GBP)</option>
+                    <option value="JPY">Japanese Yen (JPY)</option>
+                    <option value="AUD">Australian Dollar (AUD)</option>
+                    <option value="CAD">Canadian Dollar (CAD)</option>
+                </select>
+            </div>
+            <button type="submit" id="convertButton">Convert</button>
+            <button type="reset" id="resetButton">Reset</button>
+        </form>
+        <div id="result"></div>
+        <div class="error" id="error"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById("converterForm");
+        const resultDiv = document.getElementById("result");
+        const errorDiv = document.getElementById("error");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            resultDiv.innerHTML = "";
+            errorDiv.innerHTML = "";
+
+            const amount = document.getElementById("amount").value;
+            const currency = document.getElementById("currency").value;
+
+            if (!amount || !currency) {
+                errorDiv.innerHTML = "Please fill in all fields.";
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:5004/convert", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        amount: parseFloat(amount),
+                        targetCurrency: currency,
+                    }),
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <strong>Converted Amount:</strong> ${data.convertedAmount} ${data.targetCurrency}
+                    `;
+                } else {
+                    errorDiv.innerHTML = data.error || "An error occurred while converting.";
+                }
+            } catch (error) {
+                errorDiv.innerHTML = "Failed to connect to the server.";
+            }
+        });
+
+        form.addEventListener("reset", () => {
+            resultDiv.innerHTML = "";
+            errorDiv.innerHTML = "";
+        });
+    </script>
+</body>
+</html>
